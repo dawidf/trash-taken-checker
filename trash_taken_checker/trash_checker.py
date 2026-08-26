@@ -160,7 +160,22 @@ def create_event(entity_id, summary, day):
     _check(resp)
 
 
+def entity_exists(entity_id):
+    resp = requests.get(f"{HA_API}/states/{entity_id}", headers=HA_HEADERS, timeout=30)
+    return resp.status_code == 200
+
+
 def sync_calendar(entity_id, summary, days):
+    if not entity_exists(entity_id):
+        print(
+            f"Kalendarz '{entity_id}' nie istnieje w Home Assistant - pomijam. "
+            "Utwórz go najpierw przez integrację 'Lokalny kalendarz' "
+            "(Ustawienia -> Urządzenia i usługi -> Dodaj integrację) "
+            "i sprawdź, czy entity_id w konfiguracji dodatku się zgadza.",
+            file=sys.stderr,
+        )
+        return
+
     days = [d for d in days if d >= date.today()]
     if not days:
         print(f"Brak nadchodzących dat dla {entity_id}.")
@@ -202,8 +217,19 @@ def main():
         print(f"Nie znaleziono żadnych dat dla ulicy '{STREET}'.", file=sys.stderr)
         sys.exit(1)
 
-    sync_calendar(CAL_POJEMNIKI, SUMMARY_POJEMNIKI, pojemniki_dates)
-    sync_calendar(CAL_SEGREGACJA, SUMMARY_SEGREGACJA, segregacja_dates)
+    failed = False
+    for entity_id, summary, days in (
+        (CAL_POJEMNIKI, SUMMARY_POJEMNIKI, pojemniki_dates),
+        (CAL_SEGREGACJA, SUMMARY_SEGREGACJA, segregacja_dates),
+    ):
+        try:
+            sync_calendar(entity_id, summary, days)
+        except requests.exceptions.RequestException as exc:
+            print(f"Błąd komunikacji z Home Assistant dla {entity_id}: {exc}", file=sys.stderr)
+            failed = True
+
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
