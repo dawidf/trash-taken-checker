@@ -124,14 +124,20 @@ def split_sections(text):
     return text[: match.start()], text[match.start() :]
 
 
+def _check(resp):
+    if not resp.ok:
+        print(f"HA API {resp.status_code} dla {resp.url}: {resp.text}", file=sys.stderr)
+    resp.raise_for_status()
+
+
 def get_existing_dates(entity_id, start, end):
     url = f"{HA_API}/calendars/{entity_id}"
     params = {
-        "start": f"{start.isoformat()}T00:00:00",
-        "end": f"{end.isoformat()}T00:00:00",
+        "start": f"{start.isoformat()}T00:00:00Z",
+        "end": f"{end.isoformat()}T00:00:00Z",
     }
     resp = requests.get(url, headers=HA_HEADERS, params=params, timeout=30)
-    resp.raise_for_status()
+    _check(resp)
     existing = set()
     for event in resp.json():
         raw = event.get("start")
@@ -151,7 +157,7 @@ def create_event(entity_id, summary, day):
         "end_date": (day + timedelta(days=1)).isoformat(),
     }
     resp = requests.post(url, headers=HA_HEADERS, json=body, timeout=30)
-    resp.raise_for_status()
+    _check(resp)
 
 
 def sync_calendar(entity_id, summary, days):
