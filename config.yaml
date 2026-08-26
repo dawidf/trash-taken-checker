@@ -1,0 +1,32 @@
+---
+name: "Harmonogram wywozu śmieci"
+version: "1.0.0"
+slug: "trash_taken_checker"
+description: "Pobiera harmonogram wywozu odpadów (ZGK Sułkowice) i dodaje terminy do kalendarzy Home Assistant"
+url: "https://zgksulkowice.pl/index.php/harmonogram-wywozu-odpadow/"
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+startup: application
+boot: auto
+init: false
+homeassistant_api: true
+options:
+  schedule_url: "https://zgksulkowice.pl/index.php/harmonogram-wywozu-odpadow/"
+  street: "STARCÓWKA"
+  calendar_pojemniki: "calendar.wywoz_pojemniki"
+  calendar_segregacja: "calendar.wywoz_segregacja"
+  event_summary_pojemniki: "Wywóz - pojemniki"
+  event_summary_segregacja: "Wywóz - segregacja"
+  check_interval_days: 7
+schema:
+  schedule_url: "url"
+  street: "str"
+  calendar_pojemniki: "str"
+  calendar_segregacja: "str"
+  event_summary_pojemniki: "str"
+  event_summary_segregacja: "str"
+  check_interval_days: "int(1,30)"
